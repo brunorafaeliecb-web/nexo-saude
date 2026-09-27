@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NEXO Fila virtual</title>
+<style>
+body{margin:0;font-family:Georgia,serif;background:#f4f1ea}
+header{background:#0b3d2e;color:#fff;padding:14px 16px;display:flex;justify-content:space-between}
+a{color:#cde}.w{max-width:920px;margin:0 auto;padding:16px}
+.big{font-size:64px;color:#0b3d2e}.card{background:#fff;border-radius:14px;padding:14px;margin:10px 0}
+button{border:0;background:#25D366;padding:12px;border-radius:10px;font-weight:700;cursor:pointer}
+.ghost{background:#0b3d2e;color:#fff}.muted{color:#667;font-size:13px}.row{display:flex;gap:8px;flex-wrap:wrap}
+input{padding:10px;border-radius:8px;border:1px solid #ccc}
+</style></head>
+<body>
+<header><b>Fila virtual</b><span><a href="/crm">CRM</a> · <a href="/parceiros">Vitrine</a></span></header>
+<div class=w>
+<div class="card" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+<div><div class=muted>Aguardando</div><div class=big id=n>0</div></div>
+<div><input id=nome placeholder="Nome do corretor"/>
+<div class=row style="margin-top:8px"><button id=next>Chamar proximo</button><button class=ghost id=reload>Atualizar</button></div></div>
+</div>
+<div id=atual></div><h3>Fila</h3><div id=list></div>
+</div>
+<script>
+let current=null;
+const $=id=>document.getElementById(id);
+async function load(){
+  const d=await (await fetch("/api/fila")).json();
+  $("n").textContent=d.waiting||0;
+  const wait=(d.tickets||[]).filter(t=>t.status==="waiting");
+  const att=(d.tickets||[]).filter(t=>t.status==="attending");
+  $("list").innerHTML=wait.map((t,i)=>`<div class=card><b>${t.code}</b> · ${i+1}o · ${t.nome||""} · ${t.tipo} · ${t.cidade||""}</div>`).join("")||"<p class=muted>Fila vazia.</p>";
+  if(att[0]){
+    current=att[0];
+    $("atual").innerHTML=`<div class=card><b>Em atendimento: ${att[0].code}</b><p>${att[0].nome} · ${att[0].whatsapp}</p><div class=row><button id=done>Finalizar</button><button class=ghost id=skip>Devolver a fila</button><button class=ghost id=noshow>Nao compareceu</button></div></div>`;
+    $("done").onclick=()=>act("done"); $("skip").onclick=()=>act("skip"); $("noshow").onclick=()=>act("no-show");
+  } else $("atual").innerHTML="";
+}
+async function act(action){
+  if(!current) return;
+  await fetch("/api/fila",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,code:current.code})});
+  current=null; load();
+}
+$("next").onclick=async()=>{
+  const r=await (await fetch("/api/fila",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"next",broker:{nome:$("nome").value||"corretor"}})})).json();
+  if(r.empty) return alert("Fila vazia");
+  current=r.ticket;
+  const ph=String(current.whatsapp||"").replace(/\D/g,"");
+  const txt=encodeURIComponent("Ola "+(current.nome||"")+"! Senha "+current.code+" chamada na fila NEXO.");
+  if(ph) location.href="https://wa.me/"+ph+"?text="+txt;
+  load();
+};
+$("reload").onclick=load; load(); setInterval(load,5000);
+</script></body></html>
