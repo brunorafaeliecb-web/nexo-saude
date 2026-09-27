@@ -1,5 +1,6 @@
 import { store } from "./store.js";
 import { extractFromText, dossierOf } from "./parse.js";
+import { searchKb } from "./kb.js";
 const SCRIPT = {
   novo: "Ola, {nome}! Atendimento NEXO SAUDE. Para cotar: cidade, tipo e vidas. Quando for a proposta, envie o CPF por aqui.",
   qualificando: "Perfeito. Se puder, envie o CPF. O CRM guarda e eu nao peco de novo na proposta.",
@@ -42,13 +43,16 @@ export default async function handler(req, res) {
   else if (found.cpf) lead.stage = lead.stage === "novo" ? "qualificando" : lead.stage;
   else if (/\b(rj|sp|rio|empresa|pme|familiar|individual|vida)/.test(t)) lead.stage = "qualificando";
   let reply = (SCRIPT[lead.stage] || SCRIPT.novo).replace("{nome}", lead.nome || "");
-  if (found.cpf) reply = "CPF " + found.cpf + " salvo no dossie. Nao vou pedir de novo. Se tiver RG ou comprovante, pode mandar a foto.";
+  if (found.cpf) reply = "CPF " + found.cpf + " salvo no dossie. Nao vou pedir de novo.";
+  else if (incoming.length > 12) {
+    const tipoKb = lead.tipo === "empresarial" ? "empresarial" : lead.tipo;
+    const hits = searchKb({ query: incoming, tipo: tipoKb, limit: 3 });
+    if (hits.length) reply = "Pelo manual " + hits[0].title + " (p." + hits[0].page + "): " + hits[0].text.slice(0, 320);
+  }
   s.messages.push({ id: "mo" + Date.now(), leadId: lead.id, phone, dir: "out", text: reply, at: new Date().toISOString() });
   const hook = process.env.EVOLUTION_SEND_URL;
   if (hook && phone) {
-    try {
-      await fetch(hook, { method: "POST", headers: { "Content-Type": "application/json", apikey: process.env.EVOLUTION_API_KEY || "" }, body: JSON.stringify({ number: phone, text: reply }) });
-    } catch (e) {}
+    try { await fetch(hook, { method: "POST", headers: { "Content-Type": "application/json", apikey: process.env.EVOLUTION_API_KEY || "" }, body: JSON.stringify({ number: phone, text: reply }) }); } catch (e) {}
   }
   res.status(200).json({ ok: true, leadId: lead.id, stage: lead.stage, saved: found, reply });
 }
