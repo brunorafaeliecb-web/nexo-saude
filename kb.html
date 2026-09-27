@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXO · Base de planos</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    body{margin:0;font-family:system-ui,sans-serif;background:#eef3ef;color:#10231c}
+    header{background:#0d4a38;color:#fff;padding:14px 18px;display:flex;justify-content:space-between}
+    a{color:#d7eee4;text-decoration:none;margin-left:12px}
+    .w{max-width:980px;margin:0 auto;padding:20px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:800px){.grid{grid-template-columns:1fr}}
+    .card{background:#fff;border-radius:14px;padding:16px}
+    input,select,textarea,button{font:inherit;width:100%;margin:6px 0 12px;padding:10px;border-radius:10px;border:1px solid #dce6e0}
+    button{background:#0d4a38;color:#fff;border:0;font-weight:600}
+    .muted{color:#5d6f67;font-size:13px}
+  </style>
+</head>
+<body>
+<header><b>Base de planos</b><nav><a href="/crm">CRM</a></nav></header>
+<div class="w">
+<p class="muted">Cada PDF entra como consulta. Separe individual, adesao e corporativo. A IA nao inventa o que nao estiver no arquivo.</p>
+<div class="grid">
+<div class="card">
+<h3>Subir manual</h3>
+<input type="file" id="file" accept="application/pdf" />
+<input id="operadora" placeholder="Operadora: Unimed, Hapvida, Amil" />
+<select id="tipo">
+  <option value="individual">Individual / familiar</option>
+  <option value="adesao">Adesao</option>
+  <option value="empresarial">Corporativo / PME</option>
+  <option value="todos">Vale para todos</option>
+</select>
+<input id="title" placeholder="Nome do material" />
+<button id="up">Ler PDF e gravar</button>
+<p class="muted" id="st">PDF escaneado precisa OCR.</p>
+</div>
+<div class="card">
+<h3>Perguntar a base</h3>
+<textarea id="q" rows="4" placeholder="Carencia de parto no plano adesao Unimed?"></textarea>
+<button id="ask">Consultar</button>
+<pre id="ans" class="muted" style="white-space:pre-wrap"></pre>
+</div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Manuais</h3><div id="docs" class="muted">Nenhum ainda.</div></div>
+</div>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+async function refresh(){
+  const d = await (await fetch("/api/kb")).json();
+  docs.innerHTML = (d.docs||[]).length ? d.docs.map(x=>`<div><b>${x.title}</b> · ${x.operadora||"-"} · ${x.tipo} · ${x.chunks} trechos</div>`).join("") : "Nenhum ainda.";
+}
+up.onclick = async () => {
+  const file = document.getElementById("file").files[0];
+  if (!file) return alert("Escolha um PDF");
+  st.textContent = "Lendo " + file.name;
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const chunks = [];
+  for (let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const text = content.items.map(it=>it.str).join(" ").replace(/\s+/g," ").trim();
+    if (text.length>40) chunks.push({page:i,text});
+  }
+  if (!chunks.length) { st.textContent = "Sem texto. PDF escaneado."; return; }
+  const r = await (await fetch("/api/kb",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:title.value||file.name,tipo:tipo.value,operadora:operadora.value,docId:"pdf-"+Date.now(),chunks})})).json();
+  st.textContent = r.chunks + " trechos gravados";
+  refresh();
+};
+ask.onclick = async () => {
+  const r = await (await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q.value,tipo:tipo.value,operadora:operadora.value})})).json();
+  ans.textContent = r.answer || "";
+};
+refresh();
+</script>
+</body></html>
