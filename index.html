@@ -3,134 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cotação de Plano de Saúde | Compare e fale no WhatsApp</title>
-  <meta name="description" content="Compare planos de saúde individual, familiar e empresarial. Cotação grátis no WhatsApp em minutos. Atendimento no Rio e em todo o Brasil." />
+  <title>Cotacao de Plano de Saude</title>
   <meta name="theme-color" content="#0b3d2e" />
   <style>
-    :root {
-      --bg: #f4f1ea;
-      --ink: #12211b;
-      --green: #0b3d2e;
-      --green-2: #14664c;
-      --gold: #c9a227;
-      --card: #fff;
-      --muted: #5b6b64;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, "Times New Roman", serif; background: var(--bg); color: var(--ink); line-height: 1.45; }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 80px; }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 8px 0 24px; }
-    .logo { font-weight: 700; letter-spacing: .04em; color: var(--green); }
-    .badge { font-size: 12px; background: #e7efe9; color: var(--green); padding: 6px 10px; border-radius: 999px; }
-    h1 { font-size: clamp(28px, 5vw, 48px); line-height: 1.12; max-width: 16ch; }
-    .lead { margin: 14px 0 22px; color: var(--muted); max-width: 42ch; font-size: 18px; }
-    .grid { display: grid; gap: 22px; grid-template-columns: 1.1fr .9fr; }
-    @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
-    .card { background: var(--card); border-radius: 18px; padding: 22px; box-shadow: 0 10px 40px rgba(18,33,27,.08); }
-    label { display: block; font-size: 13px; margin: 12px 0 6px; color: var(--green); }
-    input, select { width: 100%; padding: 12px 12px; border: 1px solid #d7ddd9; border-radius: 10px; font: inherit; background: #fbfaf7; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
-    button, .btn { width: 100%; border: 0; background: #25D366; color: #072; font-weight: 700; padding: 14px 16px; border-radius: 12px; cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; text-align: center; }
-    button.secondary, a.secondary { background: var(--green); color: #fff; margin-top: 8px; }
-    .ok { display: none; background: #e7efe9; padding: 12px; border-radius: 10px; margin-top: 10px; }
-    .checks { margin-top: 18px; display: grid; gap: 8px; color: var(--muted); font-size: 15px; }
-    footer { margin-top: 40px; font-size: 12px; color: var(--muted); }
-    .lgpd { font-size: 12px; color: var(--muted); margin-top: 10px; display: flex; gap: 8px; align-items: flex-start; }
-    .pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
-    .pill { background: #fff; border: 1px solid #d7ddd9; border-radius: 999px; padding: 6px 10px; font-size: 13px; }
+    :root { --bg:#f4f1ea; --ink:#12211b; --green:#0b3d2e; --card:#fff; --muted:#5b6b64; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family: Georgia, serif; background:var(--bg); color:var(--ink); }
+    .wrap { max-width:1080px; margin:0 auto; padding:20px 16px 80px; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:8px 0 24px; }
+    .logo { font-weight:700; color:var(--green); }
+    .badge { font-size:12px; background:#e7efe9; color:var(--green); padding:6px 10px; border-radius:999px; }
+    h1 { font-size:clamp(28px,5vw,48px); line-height:1.12; max-width:16ch; }
+    .lead { margin:14px 0 22px; color:var(--muted); max-width:42ch; font-size:18px; }
+    .grid { display:grid; gap:22px; grid-template-columns:1.1fr .9fr; }
+    @media(max-width:820px){ .grid{grid-template-columns:1fr;} }
+    .card { background:var(--card); border-radius:18px; padding:22px; box-shadow:0 10px 40px rgba(18,33,27,.08); }
+    label { display:block; font-size:13px; margin:12px 0 6px; color:var(--green); }
+    input,select { width:100%; padding:12px; border:1px solid #d7ddd9; border-radius:10px; font:inherit; background:#fbfaf7; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    button,.btn { width:100%; border:0; background:#25D366; color:#072; font-weight:700; padding:14px; border-radius:12px; cursor:pointer; font-size:16px; text-decoration:none; display:inline-block; text-align:center; }
+    a.secondary { background:var(--green); color:#fff; margin-top:8px; }
+    .lgpd { font-size:12px; color:var(--muted); margin-top:10px; display:flex; gap:8px; }
+    footer { margin-top:40px; font-size:12px; color:var(--muted); }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="logo">NEXO SAÚDE</div>
-      <div class="badge">Cotação no WhatsApp · RJ e Brasil</div>
+      <div class="logo" id="brand">NEXO SAUDE</div>
+      <div class="badge">White-label · WhatsApp</div>
     </header>
     <div class="grid">
       <section>
-        <h1>Compare planos de saúde e receba a cotação no WhatsApp.</h1>
-        <p class="lead">Individual, familiar ou empresarial. Você preenche em 40 segundos. Um consultor responde com opções reais — sem lista fria, sem ligação insistente.</p>
-        <div class="pills">
-          <span class="pill">Unimed · Hapvida · Amil · SulAmérica · Bradesco</span>
-          <span class="pill">PF e PME</span>
-          <span class="pill">LGPD</span>
-        </div>
-        <div class="checks">
-          <div>✓ Resposta em minutos no horário comercial</div>
-          <div>✓ Comparativo por cidade, vidas e tipo de plano</div>
-          <div>✓ Sem compromisso de contratação</div>
-        </div>
+        <h1>Compare planos de saude e receba no WhatsApp.</h1>
+        <p class="lead">Individual, familiar ou empresarial. O lead vai para o pool e um corretor parceiro compra exclusivo.</p>
+        <p><a href="/parceiros">Sou corretor — ver vitrine</a></p>
       </section>
       <section class="card">
-        <h2 style="font-size:22px;margin-bottom:4px;">Pedir cotação grátis</h2>
-        <p style="color:var(--muted);font-size:14px;">O lead vai para o WhatsApp do consultor já qualificado.</p>
+        <h2>Pedir cotacao</h2>
         <form id="f">
-          <label>Nome</label>
-          <input name="nome" required placeholder="Seu nome" />
+          <label>Nome</label><input name="nome" required />
           <div class="row">
-            <div>
-              <label>WhatsApp</label>
-              <input name="whatsapp" required inputmode="tel" placeholder="21 9xxxx-xxxx" />
-            </div>
-            <div>
-              <label>Cidade</label>
-              <input name="cidade" required placeholder="Rio de Janeiro" />
-            </div>
+            <div><label>WhatsApp</label><input name="whatsapp" required /></div>
+            <div><label>Cidade</label><input name="cidade" required placeholder="Rio de Janeiro" /></div>
           </div>
           <div class="row">
-            <div>
-              <label>Tipo</label>
-              <select name="tipo" required>
-                <option value="individual">Individual</option>
-                <option value="familiar">Familiar</option>
-                <option value="empresarial">Empresarial / PME</option>
-              </select>
+            <div><label>Tipo</label>
+              <select name="tipo"><option value="individual">Individual</option><option value="familiar">Familiar</option><option value="empresarial">Empresarial / PME</option></select>
             </div>
-            <div>
-              <label>Quantas vidas</label>
-              <select name="vidas" required>
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-                <option>4</option>
-                <option>5+</option>
-                <option>10+</option>
-              </select>
+            <div><label>Vidas</label>
+              <select name="vidas"><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option><option>10+</option></select>
             </div>
           </div>
-          <label class="lgpd"><input type="checkbox" name="lgpd" required /> Autorizo contato por WhatsApp para cotação de plano de saúde. Não envio dados de saúde neste formulário.</label>
-          <button type="submit" style="margin-top:14px">Quero cotação no WhatsApp</button>
-          <a class="btn secondary" id="waDirect" href="#">Já quero falar agora</a>
+          <label class="lgpd"><input type="checkbox" name="lgpd" required /> Autorizo contato por WhatsApp para cotacao. Sem dado de saude neste form.</label>
+          <button style="margin-top:14px">Quero cotacao</button>
+          <a class="btn secondary" id="waDirect" href="#">Falar agora</a>
         </form>
-        <div class="ok" id="ok">Pedido enviado. Vamos abrir o WhatsApp com seus dados.</div>
       </section>
     </div>
-    <footer>
-      NEXO SAÚDE é um canal de cotação. Planos são oferecidos por corretores e operadoras habilitados. Não somos operadora. Política de privacidade: dados usados só para retorno da cotação.
-    </footer>
+    <footer>Canal de cotacao. Nao somos operadora. Lead exclusivo para corretor habilitado.</footer>
   </div>
   <script>
-    const WA = (window.NEXO_WA || "5521999999999");
-    const f = document.getElementById("f");
-    const ok = document.getElementById("ok");
-    function msg(d) {
-      return `Olá! Quero cotação de plano de saúde.%0ANome: ${d.nome}%0AWhatsApp: ${d.whatsapp}%0ACidade: ${d.cidade}%0ATipo: ${d.tipo}%0AVidas: ${d.vidas}`;
-    }
-    document.getElementById("waDirect").href = `https://wa.me/${WA}?text=${encodeURIComponent("Olá! Quero cotação de plano de saúde.")}`;
-    f.addEventListener("submit", async (e) => {
+    const q = new URLSearchParams(location.search);
+    const brand = q.get("wl");
+    if (brand) { document.getElementById("brand").textContent = brand.toUpperCase(); document.title = brand + " · Cotacao"; }
+    const WA = q.get("wa") || "5521999999999";
+    document.getElementById("waDirect").href = "https://wa.me/" + WA + "?text=" + encodeURIComponent("Ola! Quero cotacao de plano de saude.");
+    document.getElementById("f").onsubmit = async (e) => {
       e.preventDefault();
-      const d = Object.fromEntries(new FormData(f).entries());
-      try {
-        await fetch("/api/lead", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(d)
-        });
-      } catch (_) {}
-      ok.style.display = "block";
-      window.location.href = `https://wa.me/${WA}?text=${msg(d)}`;
-    });
+      const d = Object.fromEntries(new FormData(e.target).entries());
+      d.wl = brand;
+      try { await fetch("/api/lead", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(d) }); } catch(x){}
+      const t = `Ola! Quero cotacao.%0ANome: ${d.nome}%0AWhatsApp: ${d.whatsapp}%0ACidade: ${d.cidade}%0ATipo: ${d.tipo}%0AVidas: ${d.vidas}`;
+      location.href = "https://wa.me/" + WA + "?text=" + t;
+    };
   </script>
-</body>
-</html>
+</body></html>

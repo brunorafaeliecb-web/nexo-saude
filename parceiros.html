@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NEXO · Vitrine de leads</title>
+<style>
+body{font-family:Georgia,serif;background:#f4f1ea;margin:0}
+.w{max-width:980px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:16px;padding:16px;margin:10px 0}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media(max-width:700px){.row{grid-template-columns:1fr}}
+input,select{width:100%;padding:10px;border:1px solid #d7ddd9;border-radius:10px}
+button{border:0;background:#25D366;padding:12px;border-radius:10px;font-weight:700;width:100%;cursor:pointer}
+.tag{font-size:12px;background:#e7efe9;padding:3px 8px;border-radius:999px}
+.price{font-size:22px;color:#0b3d2e}
+</style></head>
+<body>
+<div class="w">
+<header style="display:flex;justify-content:space-between"><b>NEXO white-label</b><a href="/">Landing</a></header>
+<h1>Corretor compra o lead. Cliente nao ve leilao.</h1>
+<div class="card">
+<div class="row">
+<input id="nome" placeholder="Nome do escritorio"/>
+<input id="wa" placeholder="WhatsApp 55..."/>
+<select id="uf"><option>RJ</option><option>SP</option><option>MG</option><option>BA</option><option>PR</option></select>
+</div>
+<button id="save" style="margin-top:10px;background:#0b3d2e;color:#fff">Salvar corretor</button>
+</div>
+<div class="card"><div class="row">
+<select id="ftipo"><option value="">Todos</option><option value="individual">Individual</option><option value="familiar">Familiar</option><option value="empresarial">PME</option></select>
+<select id="fvidas"><option value="">Vidas</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option><option>10+</option></select>
+<button id="reload" style="background:#0b3d2e;color:#fff">Atualizar</button>
+</div></div>
+<div id="list"></div>
+</div>
+<script>
+const KEY="nexo_corretor";
+const $=id=>document.getElementById(id);
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null}};
+const price=t=>t==="empresarial"?35:t==="familiar"?24:19;
+$("save").onclick=()=>{const c={nome:$("nome").value.trim(),wa:$("wa").value.trim(),uf:$("uf").value};if(!c.nome||!c.wa)return alert("Preencha");localStorage.setItem(KEY,JSON.stringify(c));alert("Salvo");};
+const s=load();if(s){$("nome").value=s.nome;$("wa").value=s.wa;$("uf").value=s.uf;}
+async function render(){
+  const data=await (await fetch("/api/leads")).json();
+  const tipo=$("ftipo").value, vidas=$("fvidas").value;
+  const items=(data.leads||[]).filter(l=>l.status!=="vendido"&&(!tipo||l.tipo===tipo)&&(!vidas||String(l.vidas)===vidas));
+  $("list").innerHTML=items.length?items.map(l=>`<div class="card" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><span class=tag>${l.tipo}</span> <span class=tag>${l.vidas}</span> <span class=tag>${l.cidade||""}</span><div>${l.nome} · ${l.whatsapp}</div></div><div style="min-width:150px"><div class=price>R$ ${price(l.tipo)}</div><button data-id="${l.id}">Comprar exclusivo</button></div></div>`).join(""):"<div class=card>Nenhum lead aberto. Rode trafego.</div>";
+  document.querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>buy(b.dataset.id));
+}
+async function buy(id){
+  const c=load(); if(!c) return alert("Salve o corretor");
+  const data=await (await fetch("/api/buy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,corretor:c})})).json();
+  if(!data.ok) return alert(data.error||"Indisponivel");
+  const l=data.lead;
+  location.href="https://wa.me/"+String(l.whatsapp).replace(/\D/g,"")+"?text="+encodeURIComponent("LEAD NEXO\n"+l.nome+" | "+l.whatsapp+"\n"+l.cidade+" | "+l.tipo+" | "+l.vidas);
+}
+$("reload").onclick=render; render();
+</script></body></html>
