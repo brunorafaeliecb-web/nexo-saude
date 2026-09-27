@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NEXO CRM WhatsApp</title>
+<style>
+body{margin:0;font-family:Georgia,serif;background:#eef2ef}
+header{display:flex;justify-content:space-between;padding:12px 16px;background:#0b3d2e;color:#fff}
+a{color:#cde}
+.board{display:grid;grid-template-columns:repeat(7,minmax(180px,1fr));gap:8px;padding:12px;overflow-x:auto}
+.col{background:#f7f4ee;border-radius:12px;min-height:70vh;padding:8px}
+.card{background:#fff;border-radius:10px;padding:10px;margin:0 0 8px;cursor:pointer}
+.muted{color:#667;font-size:12px}
+.drawer{position:fixed;right:0;top:0;width:min(420px,100%);height:100%;background:#fff;padding:16px;display:none;overflow:auto;box-shadow:-8px 0 30px rgba(0,0,0,.15)}
+.msg{padding:8px 10px;border-radius:10px;margin:6px 0}
+.in{background:#e7efe9}.out{background:#dbe7ff}.note{background:#fff3cd}
+select,textarea,input,button{width:100%;margin:6px 0;padding:8px;font:inherit;border-radius:8px;border:1px solid #ccc}
+button{background:#0b3d2e;color:#fff;border:0}
+</style></head>
+<body>
+<header><b>CRM WhatsApp</b><span><a href="/">Landing</a> · <a href="/parceiros">Vitrine</a></span></header>
+<div class="board" id="board"></div>
+<div class="drawer" id="drawer"></div>
+<script>
+const STAGES=["novo","qualificando","cotacao","proposta","aguardando","ganho","perdido"];
+let DATA=[];
+async function load(){DATA=((await(await fetch("/api/crm")).json()).leads)||[];draw();}
+function draw(){
+  board.innerHTML=STAGES.map(st=>{
+    const items=DATA.filter(l=>(l.stage||"novo")===st);
+    return `<div class=col><h3>${st} (${items.length})</h3>${items.map(l=>`<div class=card data-id="${l.id}"><b>${l.nome||"s/nome"}</b><div class=muted>${l.tipo} · ${l.vidas} · ${l.cidade||""}</div><div class=muted>${l.whatsapp}</div></div>`).join("")}</div>`;
+  }).join("");
+  board.querySelectorAll("[data-id]").forEach(el=>el.onclick=()=>open(el.dataset.id));
+}
+function open(id){
+  const l=DATA.find(x=>x.id===id); const d=document.getElementById("drawer"); d.style.display="block";
+  const msgs=(l.messages||[]).map(m=>`<div class="msg ${m.dir}">${m.text}<div class=muted>${m.at||""}</div></div>`).join("");
+  d.innerHTML=`<button onclick="drawer.style.display='none'">Fechar</button><h2>${l.nome}</h2><p class=muted>${l.whatsapp}</p><a href="https://wa.me/${String(l.whatsapp).replace(/\D/g,"")}">Abrir WhatsApp</a><select id=st>${STAGES.map(s=>`<option ${s===(l.stage||"novo")?"selected":""}>${s}</option>`).join("")}</select><textarea id=note placeholder="Nota"></textarea><input id=fu type=datetime-local /><button id=save>Salvar</button><h3>Conversa</h3>${msgs||"<p class=muted>Ligue o webhook Evolution em /api/whatsapp</p>"}`;
+  document.getElementById("save").onclick=async()=>{await fetch("/api/crm",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:l.id,stage:st.value,note:note.value,followupAt:fu.value})});await load();open(id);};
+}
+load(); setInterval(load,15000);
+</script></body></html>
