@@ -1,15 +1,11 @@
-# NEXO SAUDE
+# NEXO SAUDE white-label + marketplace
 
-Landing de cotacao de plano de saude + WhatsApp.
+https://github.com/brunorafaeliecb-web/nexo-saude
 
-Repo: https://github.com/brunorafaeliecb-web/nexo-saude
+- Landing cliente: /
+- Vitrine corretores: /parceiros
+- Admin: /admin
+- Marca do corretor: /?wl=Escritorio+Silva
+- Pagina exclusiva: /?wl=Silva&wa=5521...
 
-## Como faturar
-
-1. Parceria com corretor habilitado.
-2. Troque o numero 5521999999999 no index.html.
-3. Deploy na Vercel.
-4. Trafego pago aponta para a landing.
-5. IA no WhatsApp so responde quem escreveu primeiro.
-
-Nao compre lista. LGPD + banimento matam o negocio.
+Lead exclusivo. Preco sugerido PF 19 / familiar 24 / PME 35.
