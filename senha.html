@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Sua senha NEXO</title>
+<style>body{font-family:Georgia,serif;background:#f4f1ea;margin:0;padding:32px;text-align:center}.code{font-size:48px;color:#0b3d2e}.pos{font-size:28px}</style></head>
+<body><p>Fila virtual NEXO SAUDE</p><div class=code id=code>—</div><p class=pos id=pos>Buscando...</p><p id=eta></p>
+<script>
+const code=new URLSearchParams(location.search).get("code")||"";
+document.getElementById("code").textContent=code||"sem senha";
+async function tick(){
+  if(!code) return;
+  const d=await (await fetch("/api/fila?code="+encodeURIComponent(code))).json();
+  const t=d.ticket; if(!t){pos.textContent="Senha nao encontrada";return;}
+  if(t.status==="attending") pos.textContent="Sua vez — consultor chamou no WhatsApp";
+  else if(t.status==="done") pos.textContent="Atendimento encerrado";
+  else if(t.status==="abandoned") pos.textContent="Senha encerrada";
+  else pos.textContent=t.position+"o na fila";
+  eta.textContent=t.status==="waiting"?("Espera estimada: "+Math.max(2,(t.position||1)*3)+" min"):"";
+}
+tick(); setInterval(tick,4000);
+</script></body></html>
