@@ -5,6 +5,7 @@
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/crm", "destination": "/crm.html" },
     { "source": "/fila", "destination": "/fila.html" },
-    { "source": "/senha", "destination": "/senha.html" }
+    { "source": "/senha", "destination": "/senha.html" },
+    { "source": "/proposta", "destination": "/proposta.html" }
   ]
 }
