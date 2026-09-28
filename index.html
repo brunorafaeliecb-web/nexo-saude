@@ -24,6 +24,11 @@
     a.secondary { background:var(--green); color:#fff; margin-top:8px; }
     .lgpd { font-size:12px; color:var(--muted); margin-top:10px; display:flex; gap:8px; }
     footer { margin-top:40px; font-size:12px; color:var(--muted); }
+    .ops, .quotes { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-top:28px; }
+    .ops article, .quotes article { background:#fff; border-radius:14px; padding:16px; }
+    .ops h3, .quotes h3 { font-size:18px; }
+    .muted { color:var(--muted); font-size:14px; margin-top:6px; }
+    .wa { position:fixed; right:16px; bottom:16px; width:auto; padding:14px 18px; border-radius:999px; z-index:20; }
   </style>
 </head>
 <body>
@@ -35,7 +40,7 @@
     <div class="grid">
       <section>
         <h1>Compare planos e entre na fila do WhatsApp.</h1>
-        <p class="lead">Voce recebe uma senha. O corretor chama na ordem. Sem lista fria.</p>
+        <p class="lead">Voce recebe uma senha. O corretor chama na ordem. Sem lista fria. Sem documento no primeiro contato.</p>
         <p><a href="/parceiros">Sou corretor</a> · <a href="/fila">Painel da fila</a></p>
       </section>
       <section class="card">
@@ -59,8 +64,29 @@
         </form>
       </section>
     </div>
+    <section id="operadoras" style="margin-top:48px">
+      <h2>Operadoras homologadas</h2>
+      <p class="muted">Uma ficha por operadora. Rede e carencia na conversa — sem link de exemplo.</p>
+      <div class="ops">
+        <article><h3>Unimed</h3><p class="muted">Rede propria · RJ</p></article>
+        <article><h3>Amil</h3><p class="muted">Nacional · App</p></article>
+        <article><h3>Bradesco Saude</h3><p class="muted">Familiar · Nacional</p></article>
+        <article><h3>SulAmerica</h3><p class="muted">Reembolso</p></article>
+        <article><h3>Hapvida NotreDame</h3><p class="muted">Preco · Rede propria</p></article>
+        <article><h3>Porto Saude</h3><p class="muted">PME</p></article>
+      </div>
+    </section>
+    <section style="margin-top:40px">
+      <h2>Depois da conversa</h2>
+      <div class="quotes">
+        <article><p>“Comparacao no WhatsApp no mesmo dia. Documento so na hora de fechar.”</p><p class="muted">Carla · Nova Iguacu</p></article>
+        <article><p>“PME 8 vidas. Carencia e rede da Baixada sem enrolacao.”</p><p class="muted">Rafael · Duque de Caxias</p></article>
+        <article><p>“Unimed x Amil lado a lado. Fechei so quando fez sentido.”</p><p class="muted">Jussara · Rio de Janeiro</p></article>
+      </div>
+    </section>
     <footer>Canal de cotacao. Nao somos operadora.</footer>
   </div>
+  <a class="btn wa" href="https://wa.me/5521970057020?text=Ola%21%20Quero%20cotacao%20de%20plano%20de%20saude." target="_blank" rel="noopener">WhatsApp</a>
   <script>
     const q = new URLSearchParams(location.search);
     const brand = q.get("wl");
