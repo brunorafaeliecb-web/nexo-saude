@@ -2,6 +2,13 @@ import { store, STAGES } from "./store.js";
 import { checklist, dossierOf } from "./parse.js";
 function digits(v) { return String(v || "").replace(/\D/g, ""); }
 export default async function handler(req, res) {
+  // Privileged CRM/queue endpoint: deny by default if not configured.
+  const configuredPin = process.env.ADMIN_PIN;
+  if (!configuredPin || req.headers?.["x-admin-pin"] !== configuredPin) {
+    res.status(401).json({ ok: false, error: "Unauthorized" });
+    return;
+  }
+
   const s = store();
   if (!s.messages) s.messages = [];
   if (req.method === "GET") {
