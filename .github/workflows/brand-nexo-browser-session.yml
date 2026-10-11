@@ -1,0 +1,57 @@
+name: BRafaelS NEXO browser session authentication
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  session-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax validation
+        run: find api -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Session creation and authorized API tests
+        env:
+          NODE_OPTIONS: --experimental-default-type=module
+          ADMIN_PIN: ci-only-nexo-pin
+          ADMIN_SESSION_SECRET: ci-only-session-signing-secret-123456789123456789
+        run: |
+          node --input-type=module <<'JS'
+          import session from './api/admin-session.js';
+          import crm from './api/crm.js';
+          import fila from './api/fila.js';
+          import kb from './api/kb.js';
+          const res=()=>({headers:{},setHeader(n,v){this.headers[n.toLowerCase()]=v},status(n){this.code=n;return this},json(v){this.data=v;return this}});
+          const good=res();
+          await session({method:'POST',headers:{host:'example.test',origin:'https://example.test'},body:{action:'login',pin:'ci-only-nexo-pin'}},good);
+          if(good.code!==200)throw Error('Cannot log in: '+good.code);
+          const cookie=good.headers['set-cookie'].split(';')[0];
+          if(!good.headers['set-cookie'].includes('HttpOnly; Secure; SameSite=Strict'))throw Error('Insecure cookie');
+          for(const [name,handler] of [['crm',crm],['fila',fila]]){
+            const denied=res();await handler({method:'GET',headers:{}},denied);
+            if(denied.code!==401)throw Error('Anonymous allowed '+name);
+            const allowed=res();await handler({method:'GET',headers:{cookie},query:{}},allowed);
+            if(allowed.code!==200)throw Error('Cookie rejected '+name+':'+allowed.code);
+            console.log('SIGNED_SESSION_READ_PASS',name);
+          }
+          const denied=res();await kb({method:'POST',headers:{cookie,host:'example.test',origin:'https://other.test'},body:{action:'clear',docId:'x'}},denied);
+          if(denied.code!==403)throw Error('Cross-origin write not denied');
+          console.log('CROSS_ORIGIN_MUTATION_DENIED');
+          const bad=res();await session({method:'POST',headers:{host:'example.test',origin:'https://example.test'},body:{action:'login',pin:'wrong'}},bad);
+          if(bad.code!==401)throw Error('Invalid login allowed');
+          console.log('INVALID_LOGIN_DENIED');
+          JS
+      - name: Browser pages call session endpoint not hardcoded PIN
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for file,route in [('crm.html','/api/crm'),('fila.html','/api/fila')]:
+            s=Path(file).read_text()
+            assert 'adminFetch(' in s and '/api/admin-session' in s
+            assert 'credentials:"same-origin"' in s
+            assert f'adminFetch("{route}"' in s
+            assert "x-admin-pin" not in s
+            print('UI_COOKIE_AUTH_CONTRACT_PASS',file)
+          PY
