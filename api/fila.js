@@ -6,6 +6,13 @@ function ensure() {
 }
 function waiting() { return ensure().fila.tickets.filter((t) => t.status === "waiting"); }
 export default async function handler(req, res) {
+  // Privileged CRM/queue endpoint: deny by default if not configured.
+  const configuredPin = process.env.ADMIN_PIN;
+  if (!configuredPin || req.headers?.["x-admin-pin"] !== configuredPin) {
+    res.status(401).json({ ok: false, error: "Unauthorized" });
+    return;
+  }
+
   const s = ensure();
   const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
   if (req.method === "GET") {
