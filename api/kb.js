@@ -1,3 +1,4 @@
+import { requireAdmin } from "./_admin-auth.js";
 import { store } from "./store.js";
 function tokens(s) {
   return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((w) => w.length > 2);
@@ -31,11 +32,7 @@ export default async function handler(req, res) {
     return;
   }
   if (req.method !== "POST") { res.status(405).json({ ok: false }); return; }
-  const adminPin = process.env.ADMIN_PIN;
-  if (!adminPin || req.headers?.["x-admin-pin"] !== adminPin) {
-    res.status(401).json({ ok: false, error: "Unauthorized" });
-    return;
-  }
+  if (!requireAdmin(req, res)) return;
   const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
   if (body.action === "clear") {
     s.kb = s.kb.filter((c) => c.docId !== body.docId);
