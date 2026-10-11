@@ -21,10 +21,19 @@ input{padding:10px;border-radius:8px;border:1px solid #ccc}
 <div id=atual></div><h3>Fila</h3><div id=list></div>
 </div>
 <script>
+    async function adminFetch(url, options={}) {
+      let response=await fetch(url,{...options,credentials:"same-origin"});
+      if(response.status!==401) return response;
+      const pin=window.prompt("Acesso administrativo NEXO: informe sua credencial");
+      if(!pin) throw new Error("Autenticação administrativa necessária");
+      const login=await fetch("/api/admin-session",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({action:"login",pin})});
+      if(!login.ok) throw new Error("Credencial não autorizada");
+      return fetch(url,{...options,credentials:"same-origin"});
+    }
 let current=null;
 const $=id=>document.getElementById(id);
 async function load(){
-  const d=await (await fetch("/api/fila")).json();
+  const d=await (await adminFetch("/api/fila")).json();
   $("n").textContent=d.waiting||0;
   const wait=(d.tickets||[]).filter(t=>t.status==="waiting");
   const att=(d.tickets||[]).filter(t=>t.status==="attending");
@@ -37,11 +46,11 @@ async function load(){
 }
 async function act(action){
   if(!current) return;
-  await fetch("/api/fila",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,code:current.code})});
+  await adminFetch("/api/fila",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,code:current.code})});
   current=null; load();
 }
 $("next").onclick=async()=>{
-  const r=await (await fetch("/api/fila",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"next",broker:{nome:$("nome").value||"corretor"}})})).json();
+  const r=await (await adminFetch("/api/fila",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"next",broker:{nome:$("nome").value||"corretor"}})})).json();
   if(r.empty) return alert("Fila vazia");
   current=r.ticket;
   const ph=String(current.whatsapp||"").replace(/\D/g,"");
