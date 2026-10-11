@@ -1,0 +1,20 @@
+name: BRafaelS NEXO frontend access compatibility
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  ui-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect blocked legacy clients without exposing admin keys
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name,route in [('crm.html','/api/crm'),('fila.html','/api/fila')]:
+            s=Path(name).read_text()
+            api=Path('api/'+route.rsplit('/',1)[-1]+'.js').read_text()
+            assert route in s and 'x-admin-pin' in api
+            print('LEGACY_CLIENT_AUTH_INCOMPATIBILITY_CONFIRMED',name,route)
+          print('GATE_REQUIRES_SERVER_SIDE_SESSION_OR_ACTION_SPLIT')
+          PY
