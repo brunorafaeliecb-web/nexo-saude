@@ -47,10 +47,19 @@
     <aside class="dossier" id="side"><p class="empty">Selecione um card. CPF e docs enviados no WhatsApp entram sozinhos no checklist.</p></aside>
   </div>
   <script>
+    async function adminFetch(url, options={}) {
+      let response=await fetch(url,{...options,credentials:"same-origin"});
+      if(response.status!==401) return response;
+      const pin=window.prompt("Acesso administrativo NEXO: informe sua credencial");
+      if(!pin) throw new Error("Autenticação administrativa necessária");
+      const login=await fetch("/api/admin-session",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({action:"login",pin})});
+      if(!login.ok) throw new Error("Credencial não autorizada");
+      return fetch(url,{...options,credentials:"same-origin"});
+    }
     const STAGES = ["novo","qualificando","cotacao","proposta","aguardando","ganho","perdido"];
     let DATA = []; let OPEN = null;
     const esc = (s) => String(s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
-    async function load(){ DATA=((await(await fetch("/api/crm")).json()).leads)||[]; draw(); if(OPEN) show(OPEN); }
+    async function load(){ DATA=((await(await adminFetch("/api/crm")).json()).leads)||[]; draw(); if(OPEN) show(OPEN); }
     function draw(){
       board.innerHTML = STAGES.map(st => {
         const items = DATA.filter(l => (l.stage||"novo")===st);
@@ -93,7 +102,7 @@
         <button id="save">Salvar dossie</button>
         <div class="thread">${msgs || "<p class=meta>O CPF enviado no Zap entra sozinho aqui.</p>"}</div>`;
       document.getElementById("save").onclick = async () => {
-        await fetch("/api/crm",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        await adminFetch("/api/crm",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
           id:l.id, stage:st.value, note:note.value, file:{id:fileid.value,name:"manual"},
           dossier:{cpf:cpf.value,rg:rg.value,nascimento:nascimento.value,mae:mae.value,email:email.value,cep:cep.value,endereco:endereco.value}
         })});
