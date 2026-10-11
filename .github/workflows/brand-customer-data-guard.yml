@@ -1,0 +1,45 @@
+name: BRafaelS NEXO privacy endpoint qualification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  customer-data-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: find api -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: No credential configured must deny personal-data endpoints
+        env:
+          NODE_OPTIONS: --experimental-default-type=module
+        run: |
+          node --input-type=module <<'JS'
+          delete process.env.ADMIN_PIN;
+          for (const name of ['crm','leads','fila']) {
+            const {default: handler} = await import('./api/'+name+'.js');
+            for (const method of ['GET','POST']) {
+              const req={method,headers:{},body:{},query:{}};
+              const res={status(n){this.code=n;return this},json(v){this.body=v;return this}};
+              await handler(req,res);
+              if (res.code!==401 || res.body?.ok!==false) throw new Error(name+':'+method+' unguarded '+res.code);
+              console.log('DENY_BY_DEFAULT_PASS',name,method);
+            }
+          }
+          JS
+      - name: Incorrect credential must deny
+        env:
+          NODE_OPTIONS: --experimental-default-type=module
+          ADMIN_PIN: audit-nonproduction-only
+        run: |
+          node --input-type=module <<'JS'
+          for (const name of ['crm','leads','fila']) {
+            const {default:handler}=await import('./api/'+name+'.js');
+            const res={status(n){this.code=n;return this},json(v){this.body=v;return this}};
+            await handler({method:'GET',headers:{'x-admin-pin':'wrong'},query:{}},res);
+            if(res.code!==401) throw new Error('Not denied '+name);
+            console.log('INVALID_CREDENTIAL_DENIED',name);
+          }
+          JS
