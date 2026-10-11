@@ -1,0 +1,32 @@
+name: BRafaelS NEXO knowledge-base mutation guard
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  kb-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test unauthenticated KB mutation denied
+        env:
+          NODE_OPTIONS: --experimental-default-type=module
+        run: |
+          node --input-type=module <<'JS'
+          const {default: handler}=await import('./api/kb.js');
+          const makeRes=()=>({status(n){this.code=n;return this},json(v){this.body=v;return this}});
+          delete process.env.ADMIN_PIN;
+          for (const action of ['clear','upload','add']) {
+            const res=makeRes();
+            await handler({method:'POST',headers:{},body:{action,docId:'example'}},res);
+            if(res.code!==401)throw new Error('Mutation not guarded '+action+':'+res.code);
+            console.log('KB_ANONYMOUS_MUTATION_DENIED',action);
+          }
+          process.env.ADMIN_PIN='nonproduction-ci-secret';
+          const res=makeRes();
+          await handler({method:'POST',headers:{'x-admin-pin':'invalid'},body:{action:'clear',docId:'example'}},res);
+          if(res.code!==401)throw new Error('Invalid PIN allowed');
+          console.log('KB_INVALID_CREDENTIAL_DENIED');
+          JS
