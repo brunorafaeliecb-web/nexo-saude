@@ -46,9 +46,18 @@ export function clearSession(res) {
 }
 
 export function requireAdmin(req, res) {
-  if (isAdmin(req)) return true;
-  res.status(401).json({ ok: false, error: "Unauthorized" });
-  return false;
+  if (!isAdmin(req)) {
+    res.status(401).json({ ok: false, error: "Unauthorized" });
+    return false;
+  }
+  // Cookie-based browser writes require a same-origin Origin header; the
+  // legacy administrator header is intended only for trusted server clients.
+  if (!["GET", "HEAD", "OPTIONS"].includes(req.method) &&
+      !req.headers?.["x-admin-pin"] && !checkOrigin(req)) {
+    res.status(403).json({ ok: false, error: "Invalid origin" });
+    return false;
+  }
+  return true;
 }
 
 export function checkOrigin(req) {
