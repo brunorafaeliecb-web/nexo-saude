@@ -1,0 +1,44 @@
+name: BRafaelS NEXO session adversarial regression
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  adversarial:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Cookie tampering, expiry, logout and CSRF checks
+        env:
+          NODE_OPTIONS: --experimental-default-type=module
+          ADMIN_PIN: test-only-secret
+          ADMIN_SESSION_SECRET: ci-test-only-long-signing-secret-01234567890123456789
+        run: |
+          node --input-type=module <<'JS'
+          import session from './api/admin-session.js';
+          import {isAdmin,requireAdmin} from './api/_admin-auth.js';
+          const res=()=>({headers:{},setHeader(k,v){this.headers[k.toLowerCase()]=v;},status(k){this.code=k;return this},json(v){this.body=v;return this}});
+          const login=res();
+          await session({method:'POST',headers:{origin:'https://example.test',host:'example.test'},body:{action:'login',pin:'test-only-secret'}},login);
+          if(login.code!==200)throw Error('Login regression');
+          const cookie=login.headers['set-cookie'].split(';')[0];
+          if(!isAdmin({headers:{cookie}}))throw Error('Signed cookie rejected');
+          const [name,val]=cookie.split('=');
+          const [expiry,mac]=val.split('.');
+          for(const variant of [name+'='+expiry+'.invalid',name+'='+(Date.now()-1000)+'.'+mac,name+'='+(Date.now()+999999999)+'.'+mac]) {
+            if(isAdmin({headers:{cookie:variant}}))throw Error('Invalid cookie accepted');
+          }
+          console.log('SESSION_TAMPER_EXPIRY_DENIED');
+          const denied=res();
+          requireAdmin({method:'POST',headers:{cookie,origin:'https://evil.test',host:'example.test'}},denied);
+          if(denied.code!==403)throw Error('Cross-origin mutation allowed');
+          const cross=res();
+          await session({method:'POST',headers:{origin:'https://evil.test',host:'example.test'},body:{action:'login',pin:'test-only-secret'}},cross);
+          if(cross.code!==403)throw Error('Cross-origin login allowed');
+          const logout=res();
+          await session({method:'POST',headers:{origin:'https://example.test',host:'example.test'},body:{action:'logout'}},logout);
+          if(logout.code!==200||!logout.headers['set-cookie'].includes('Max-Age=0'))throw Error('Logout cookie not cleared');
+          console.log('SESSION_ORIGIN_LOGOUT_PASS');
+          JS

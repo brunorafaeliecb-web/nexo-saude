@@ -1,7 +1,10 @@
+import { requireAdmin } from "./_admin-auth.js";
 import { store, STAGES } from "./store.js";
 import { checklist, dossierOf } from "./parse.js";
 function digits(v) { return String(v || "").replace(/\D/g, ""); }
 export default async function handler(req, res) {
+  if (!requireAdmin(req, res)) return;
+
   const s = store();
   if (!s.messages) s.messages = [];
   if (req.method === "GET") {

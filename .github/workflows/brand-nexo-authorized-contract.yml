@@ -1,0 +1,31 @@
+name: BRafaelS NEXO valid-credential functional test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  functional-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Credential permits read-only API and still blocks anonymous
+        env:
+          NODE_OPTIONS: --experimental-default-type=module
+          ADMIN_PIN: ci-only-dummy-value
+        run: |
+          node --input-type=module <<'JS'
+          const routes=['crm','leads','fila'];
+          for(const name of routes){
+            const {default:handler}=await import('./api/'+name+'.js');
+            const mk=()=>({status(n){this.code=n;return this},json(v){this.value=v;return this}});
+            const unauthorized=mk();
+            await handler({method:'GET',headers:{},query:{}},unauthorized);
+            if(unauthorized.code!==401)throw Error('Anonymous allowed: '+name);
+            const ok=mk();
+            await handler({method:'GET',headers:{'x-admin-pin':'ci-only-dummy-value'},query:{}},ok);
+            if(ok.code!==200||ok.value?.ok!==true)throw Error('Admin not operational: '+name+' '+ok.code);
+            console.log('AUTHENTICATED_READ_PASS',name);
+          }
+          JS

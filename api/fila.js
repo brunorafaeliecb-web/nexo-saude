@@ -1,3 +1,4 @@
+import { requireAdmin } from "./_admin-auth.js";
 import { store } from "./store.js";
 function ensure() {
   const s = store();
@@ -6,6 +7,8 @@ function ensure() {
 }
 function waiting() { return ensure().fila.tickets.filter((t) => t.status === "waiting"); }
 export default async function handler(req, res) {
+  if (!requireAdmin(req, res)) return;
+
   const s = ensure();
   const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
   if (req.method === "GET") {
